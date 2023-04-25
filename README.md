@@ -28,3 +28,19 @@ Programa paralelo que calcula independientemente los 3-ciclos de cada uno de
 Recibe como argumento una lista con los nombres de los ficheros.
 
 Produce como salida el número de 3 ciclos de cada uno.
+
+def getTriciclos(file):
+    return getTriciclosMult([file])
+def getTriciclosMult (files):
+    for file in files:
+        ...
+    return f'En {files} hay {x} triciclos'
+def getTriciclos local(files):
+    r = []
+    for file in files:
+        r.append(getTriciclos(file))
+    return r
+def formateaListaFicheros(files):
+    for file in files:
+        r += file+', '
+    return r[0:-1]
