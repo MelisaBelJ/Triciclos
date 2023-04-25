@@ -1,5 +1,5 @@
 # Triciclos
-Para ejecutar el archivo _Tricilos.py_ se da como primer argumento el nombre del fichero (o ficheros separados por comas: ej: nombre1,nombre2) del que leer los grafos y, de forma opcional, como segundo se escribe local si se quiere que los ficheros se evaluen como grafos independientes. Por defecto, considera que si hay más de un fichero todos forman parte del mismo grafo.
+Para ejecutar el archivo _Triciclos.py_ se da como primer argumento el nombre del fichero (o ficheros separados por comas: ej: nombre1,nombre2) del que leer los grafos y, de forma opcional, como segundo se escribe local si se quiere que los ficheros se evaluen como grafos independientes. Por defecto, considera que si hay más de un fichero todos forman parte del mismo grafo.
 
 ```console
 User@#PATH#Triciclos~$ python3 Triciclos.py nombreFichero(s) (local)
