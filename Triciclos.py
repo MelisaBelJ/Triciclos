@@ -1,4 +1,5 @@
 from pyspark import SparkContext
+from itertools import combinations
 import sys
 
 class Triciclos():
@@ -7,12 +8,15 @@ class Triciclos():
     
     @staticmethod
     def getBordes(line):
-        a = line.split(",")
-        if a[0] == a[1]:
-            return None
-        else:
+        return Triciclos.getBordesLista(line.split(","))
+
+    @staticmethod
+    def getBordesLista(a):
+        if a[0] != a[1]:
             r = a[0] < a[1]
             return a[(r+1)%2], a[r]
+        else:
+            return None
         
     @staticmethod
     def transforma(fila):
@@ -20,23 +24,23 @@ class Triciclos():
         r = []
         for y in lista:
             if x != y:
-                e = (x, y), 'existe'
+                e = (x, y), True
                 if e not in r:
                     r.append(e)
         for a in combinations(lista, 2):
-            if a[0] != a[1]:
-                z = a[0] < a[1]:
-                e = (a[(z+1)%2], a[z]), ('pendiente', x)
+            aux = Triciclos.getBordesLista(a)
+            if aux != None:
+                e = aux, x
                 if e not in r:
                     r.append(e)
         return r
 
     @staticmethod
-    def hayExiste(fila):
+    def existe(fila):
         _, valores = fila
         x = False
         for valor in valores:
-            if valor == "existe":
+            if valor == True:
                 x = True
                 break
         return x
@@ -44,23 +48,23 @@ class Triciclos():
     @staticmethod
     def encuentraTriciclos(fila):
         clave, valores = fila
-        bordes = []
-        for valor in valores:
-            if valor != "existe":
-                _, a1 = valor
-                a2, a3 = clave
-                bordes.append((a1, a2, a3))
+        a2, a3 = clave
+        bordes = [(valor, a2, a3) for valor in valores if not (valor==True)]
         return bordes
     
     @staticmethod
-    def getTriciclos(ficheros, local):
+    def getTriciclos(ficheros, noLocal):
         if type(ficheros) is list:
-            if local:
-                Triciclos.getTriciclosLocal(ficheros)
+            if noLocal:
+                print('Muchos ficheros, no locales')
+                r = Triciclos.getTriciclosMult(ficheros)
             else:
-                Triciclos.getTriciclosMult(ficheros)
+                print('Muchos ficheros, locales')
+                r = Triciclos.getTriciclosLocal(ficheros)
         else:
-            Triciclos.getTriciclos0(ficheros)
+            print('Un fichero')
+            r = Triciclos.getTriciclos0(ficheros)
+        return r
     
     @staticmethod
     def getTriciclos0(fichero):
@@ -68,20 +72,21 @@ class Triciclos():
     
     @staticmethod
     def getTriciclosMult (ficheros):
-        x = 0
+        rdd = ''
         with SparkContext() as sc:
             for fichero in ficheros:
-                data = sc.textFile(fname)
-                rdd = data.map(Triciclos.getBordes).filter(lambda x: x != None).groupByKey().\
-                flatMap(Triciclos.transforma).groupByKey().filter(Triciclos.hayExiste).flatMap(Triciclos.encuentraTriciclos)
-                x = rdd.collect()
-        return f'En {ficheros} hay {x} triciclos'
+                print(fichero)
+                data = sc.textFile(fichero)
+                rdd = data if rdd=='' else sc.union([data, rdd])
+            rdd = rdd.map(Triciclos.getBordes).filter(lambda x: x != None).groupByKey().flatMap(Triciclos.transforma).groupByKey().filter(Triciclos.existe).flatMap(Triciclos.encuentraTriciclos)
+            x = f'    En {Triciclos.formateaListaFicheros(ficheros)} hay {rdd.count()} triciclos'
+        return x
     
     @staticmethod
     def getTriciclosLocal(ficheros):
-        r = []
+        r = ''
         for fichero in ficheros:
-            r.append(Triciclos.getTriciclos0(fichero) + '\n')
+            r += Triciclos.getTriciclos0(fichero) + '\n'
         return r
     
     @staticmethod
@@ -91,13 +96,13 @@ class Triciclos():
             r += fichero + ', '
         return r[0:-2]
     
-def main(ficheros = 'triciclos.txt', local = True):   
-    print(Triciclos.getTriciclos(ficheros, local))
+def main(ficheros = 'g0.txt', noLocal = False):   
+    print('Resultado: \n'+Triciclos.getTriciclos(ficheros, noLocal))
 
 if __name__ == "__main__":
-    if len(sys.argv) == 2:
-        main(sys.argv[1])
-    elif len(sys.argv) == 3:
-        main(sys.argv[1], sys.argv[2])
+    l = len(sys.argv)
+    if l > 1:
+        fichero, noLocal = sys.argv[1], l==2 or not 'local' in sys.argv[2]
+        main(fichero.split(',') if ',' in fichero else fichero, noLocal)
     else:
         main()
