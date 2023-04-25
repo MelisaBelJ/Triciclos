@@ -33,5 +33,5 @@ Recibe como argumento una lista con los nombres de los ficheros.
 Produce como salida el número de 3 ciclos de cada uno.
 
 ## 4. Función _getTriciclos_
-Recibe un fichero o una lista de ficheros y un booleano opcional, que se toma como True por defecto. El booleano como True indica que si se recibe una lista de ficheros
+Recibe un fichero o una lista de ficheros y un booleano opcional, que se toma como False por defecto. El booleano como True indica que si se recibe una lista de ficheros
 se deben tratar como si los ciclos que contuvieran fueran independientes. Aplica la función correspondiente para calcular la cantidad de triciclos.
