@@ -6,10 +6,20 @@ class Triciclos():
     def __init__(self):
         pass
     
+    """
+    Obtiene las aristas del grafo con el menor número a la izquierda.    
+    Si es un ciclo, devuelve None, pues no interesa.
+    Recibe la arista como un string de la forma: valor1, valor2
+    """
     @staticmethod
     def getBordes(line):
         return Triciclos.getBordesLista(line.split(","))
-
+    
+    """
+    Devuelve las aristas del grafo con el menor número a la izquierda.
+    Si es un ciclo, devuelve None, pues no interesa.
+    Recibe la arista como iterable.
+    """
     @staticmethod
     def getBordesLista(a):
         if a[0] != a[1]:
@@ -18,42 +28,55 @@ class Triciclos():
         else:
             return None
         
+    """
+    Recibe un iterable de la forma: valor, lista_de_adyacentes.
+    Devuelve una lista ordenada de tuplas formadas por aristas y un segundo valor, que es:
+      - True, si el arista es de la forma (valor, y) con y en lista_de_adyacentes.
+      - valor, si el arista está formado por miembros distintos de lista_de_adyacentes.
+    """
     @staticmethod
     def transforma(fila):
-        x, lista = fila[0], list(fila[1])
+        valor, lista = fila[0], list(fila[1])
         r = []
         for y in lista:
-            if x != y:
-                e = (x, y), True
+            if valor != y:
+                e = (valor, y), True
                 if e not in r:
                     r.append(e)
         for a in combinations(lista, 2):
             aux = Triciclos.getBordesLista(a)
             if aux != None:
-                e = aux, x
+                e = aux, valor
                 if e not in r:
                     r.append(e)
         return r
 
+    """
+    Devuelve True si y solo si alguno de los aristas tiene asociado True (está en el grafo)
+    """
     @staticmethod
     def existe(fila):
-        _, valores = fila
-        x = False
-        for valor in valores:
-            if valor == True:
-                x = True
-                break
-        return x
+        _, aristas = fila        
+        return any(arista == True for arista in aristas)
 
+
+    """
+    Devuelve una lista con los triciclos en la fila
+    """
     @staticmethod
     def encuentraTriciclos(fila):
-        clave, valores = fila
-        a2, a3 = clave
-        bordes = [(valor, a2, a3) for valor in valores if not (valor==True)]
-        return bordes
+        arista, valores = fila
+        a2, a3 = arista
+        return [(a1, a2, a3) for a1 in valores if not (a1 == True)]
     
+    """
+    Devuelve la cantidad de triciclos que hay en el/los fichero(s) que recibe:
+    Tiene como parámetros 
+        - el nombre del fichero o una lista con nombres de ficheros y
+        - un booleano indicando si, de ser una lista, esta represeta un único grafo, o varios independientes.   
+    """
     @staticmethod
-    def getTriciclos(ficheros, noLocal):
+    def getTriciclos(ficheros, noLocal = False):
         if type(ficheros) is list:
             if noLocal:
                 print('Muchos ficheros, no locales')
@@ -66,10 +89,16 @@ class Triciclos():
             r = Triciclos.getTriciclos0(ficheros)
         return r
     
+    """
+    Devuelve la cantidad de triciclos en elgrafo representado por el fichero que recibe como argumento.
+    """
     @staticmethod
     def getTriciclos0(fichero):
         return Triciclos.getTriciclosMult([fichero])
     
+    """
+    Devuelve la cantidad de triciclos en el grafo representado por los ficheros de la lista que recibe como argumento.
+    """
     @staticmethod
     def getTriciclosMult (ficheros):
         rdd = ''
@@ -79,22 +108,18 @@ class Triciclos():
                 data = sc.textFile(fichero)
                 rdd = data if rdd=='' else sc.union([data, rdd])
             rdd = rdd.map(Triciclos.getBordes).filter(lambda x: x != None).groupByKey().flatMap(Triciclos.transforma).groupByKey().filter(Triciclos.existe).flatMap(Triciclos.encuentraTriciclos)
-            x = f'    En {Triciclos.formateaListaFicheros(ficheros)} hay {rdd.count()} triciclos'
+            x = f"    En {', '.join(ficheros)} hay {rdd.count()} triciclos"
         return x
     
+    """
+    Devuelve la cantidad de triciclos en cada uno de los grafos representados por los ficheros en la lista que recibe como argumento.
+    """
     @staticmethod
     def getTriciclosLocal(ficheros):
         r = ''
         for fichero in ficheros:
             r += Triciclos.getTriciclos0(fichero) + '\n'
         return r
-    
-    @staticmethod
-    def formateaListaFicheros(ficheros):
-        r = ''
-        for fichero in ficheros:
-            r += fichero + ', '
-        return r[0:-2]
     
 def main(ficheros = 'g0.txt', noLocal = False):   
     print('Resultado: \n'+Triciclos.getTriciclos(ficheros, noLocal))
